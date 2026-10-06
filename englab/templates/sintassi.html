@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Come scrivere le formule · {{ settings.site_name }}{% endblock %}
+{% block description %}Guida rapida alla scrittura di funzioni, matrici e reazioni nei calcolatori di {{ settings.site_name }}.{% endblock %}
+{% block content %}
+<nav class="crumbs"><a href="/">Home</a> › Come scrivere le formule</nav>
+<h1>Come scrivere le formule</h1>
+<article class="prose panel">
+  <p>Puoi scrivere come sul quaderno: la moltiplicazione implicita (<code>2x</code>, <code>3sen(x)</code>) e la notazione italiana sono riconosciute.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Scrivi</th><th>Significato</th></tr></thead>
+    <tbody>
+      <tr><td><code>x^2</code>, <code>x^(1/3)</code></td><td>$x^2$, $\sqrt[3]{x}$</td></tr>
+      <tr><td><code>sqrt(x)</code> o <code>radq(x)</code></td><td>$\sqrt{x}$</td></tr>
+      <tr><td><code>sen(x)</code> o <code>sin(x)</code>, <code>cos(x)</code>, <code>tg(x)</code></td><td>funzioni trigonometriche</td></tr>
+      <tr><td><code>arcsen(x)</code>, <code>arccos(x)</code>, <code>arctg(x)</code></td><td>funzioni inverse</td></tr>
+      <tr><td><code>ln(x)</code> o <code>log(x)</code></td><td>logaritmo naturale $\ln x$</td></tr>
+      <tr><td><code>e^x</code> o <code>exp(x)</code></td><td>$e^x$</td></tr>
+      <tr><td><code>abs(x)</code> o <code>|x|</code></td><td>$|x|$</td></tr>
+      <tr><td><code>pi</code>, <code>e</code>, <code>inf</code></td><td>$\pi$, $e$, $+\infty$</td></tr>
+      <tr><td><code>2,5</code> o <code>2.5</code></td><td>numero decimale</td></tr>
+    </tbody>
+  </table></div>
+  <h2>Attenzione</h2>
+  <ul>
+    <li>Gli argomenti delle funzioni vanno tra parentesi: <code>sen(x)</code>, non <code>senx</code>.</li>
+    <li>Le variabili sono di una sola lettera; scrivi <code>x*y</code> invece di <code>xy</code>.</li>
+    <li><code>sen(x)^2</code> è $\sin^2 x$; <code>sen(x^2)</code> è $\sin(x^2)$.</li>
+  </ul>
+  <h2>Matrici</h2>
+  <p>Una riga per linea, elementi separati da spazi. Ammesse frazioni e parametri:</p>
+  <pre>1   2   1/2
+0   k   3
+-1  0   sqrt(2)</pre>
+  <h2>Reazioni chimiche</h2>
+  <p>Separa reagenti e prodotti con <code>-&gt;</code> o <code>=</code>, le specie con <code>+</code>. Parentesi e idrati sono supportati: <code>Ca(OH)2</code>, <code>CuSO4*5H2O</code>.</p>
+</article>
+{% endblock %}

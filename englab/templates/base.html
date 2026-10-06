@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ settings.site_name }} · Calcolatori passo passo per ingegneria{% endblock %}</title>
+  <meta name="description" content="{% block description %}Calcolatori gratuiti con tutti i passaggi per Analisi 1, Algebra lineare, Calcolo numerico, Chimica e Fisica. Pensati per studenti di ingegneria.{% endblock %}">
+  <link rel="canonical" href="{{ settings.site_url }}{{ request.url.path }}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ settings.site_name }}">
+  <meta property="og:title" content="{{ self.title() }}">
+  <meta property="og:description" content="{{ self.description() }}">
+  <meta property="og:url" content="{{ settings.site_url }}{{ request.url.path }}">
+  <meta name="theme-color" content="#2357d9">
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/vendor/katex/katex.min.css">
+  <link rel="stylesheet" href="/static/style.css?v={{ version }}">
+  {% if settings.analytics_domain %}
+  <script defer data-domain="{{ settings.analytics_domain }}" src="https://plausible.io/js/script.js"></script>
+  {% endif %}
+  {% if settings.adsense_client %}
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ settings.adsense_client }}" crossorigin="anonymous"></script>
+  {% endif %}
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="brand" href="/"><span class="brand-mark">∫</span> {{ settings.site_name }}</a>
+      <button class="menu-toggle" aria-label="Apri menu" aria-expanded="false" onclick="document.body.classList.toggle('nav-open');this.setAttribute('aria-expanded',document.body.classList.contains('nav-open'))">☰</button>
+      <nav class="mainnav">
+        {% for key, (name, _) in sections.items() %}
+        <a href="/{{ key }}" {% if request.url.path.startswith('/' ~ key) %}class="active"{% endif %}>{{ name }}</a>
+        {% endfor %}
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <div>
+        <strong>{{ settings.site_name }}</strong> · strumenti gratuiti per studenti di ingegneria.<br>
+        <span class="muted">I risultati sono calcolati con software di calcolo simbolico e numerico: usali per verificare il tuo lavoro, non per sostituirlo.</span>
+      </div>
+      <div class="footer-links">
+        <a href="/come-si-scrive">Come scrivere le formule</a>
+        <a href="/privacy">Privacy e cookie</a>
+        {% if settings.donate_url %}<a href="{{ settings.donate_url }}" rel="noopener" target="_blank">☕ Offrimi un caffè</a>{% endif %}
+        {% if settings.contact_email %}<a href="mailto:{{ settings.contact_email }}">Contatti</a>{% endif %}
+      </div>
+    </div>
+  </footer>
+  <script src="/static/vendor/katex/katex.min.js"></script>
+  <script src="/static/vendor/katex/contrib/auto-render.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      document.querySelectorAll(".prose, .card-desc").forEach(function (el) {
+        renderMathInElement(el, {delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}], throwOnError: false});
+      });
+    });
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

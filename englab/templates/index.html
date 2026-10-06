@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <h1>Esercizi di ingegneria, <span class="accent">risolti passo passo</span></h1>
+  <p class="lead">Derivate, integrali, studio di funzione, Gauss, autovalori, metodi numerici e stechiometria.
+    Scrivi l'esercizio come sul quaderno: {{ settings.site_name }} ti mostra ogni passaggio, il grafico e il codice.</p>
+  <form class="quick" onsubmit="event.preventDefault();location.href='/analisi/derivate?expr='+encodeURIComponent(this.q.value)">
+    <input name="q" placeholder="Prova: x^2 sen(x)" aria-label="Funzione da derivare" autocomplete="off">
+    <button class="btn">Deriva</button>
+  </form>
+  <p class="muted small">Gratis, senza registrazione. Funziona anche da telefono.</p>
+</section>
+
+{% for key, (name, desc) in sections.items() %}
+<section class="home-section">
+  <div class="section-head">
+    <h2><a href="/{{ key }}">{{ name }}</a></h2>
+    <p class="muted">{{ desc }}</p>
+  </div>
+  <div class="grid">
+    {% for t in tools if t.section == key %}
+    <a class="card" href="{{ t.url }}">
+      <span class="card-title">{{ t.name }}</span>
+      <span class="card-desc">{{ t.description }}</span>
+    </a>
+    {% endfor %}
+    {% for t in client_tools if t.section == key %}
+    <a class="card" href="/{{ t.section }}/{{ t.slug }}">
+      <span class="card-title">{{ t.name }} <span class="tag">simulatore</span></span>
+      <span class="card-desc">{{ t.description }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endfor %}
+
+<section class="why">
+  <div><h3>Passaggi, non solo risultati</h3><p>Ogni regola applicata è spiegata: puoi trovare esattamente dove il tuo svolgimento diverge.</p></div>
+  <div><h3>Risultati affidabili</h3><p>I calcoli usano un motore di calcolo simbolico, non un'intelligenza artificiale che "indovina".</p></div>
+  <div><h3>Impari anche il codice</h3><p>Per Calcolo numerico vedi il codice Python di ogni metodo, pronto da studiare e riusare.</p></div>
+</section>
+{% endblock %}

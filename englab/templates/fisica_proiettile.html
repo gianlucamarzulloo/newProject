@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}{{ tool.title }} · {{ settings.site_name }}{% endblock %}
+{% block description %}{{ tool.description }}{% endblock %}
+{% block content %}
+<nav class="crumbs"><a href="/">Home</a> › <a href="/fisica">Fisica 1</a> › {{ tool.name }}</nav>
+<h1>{{ tool.title }}</h1>
+<p class="lead">{{ tool.description }}</p>
+
+<div class="sim-grid">
+  <div class="panel" id="controls">
+    <div class="slider"><div class="slider-top"><span>Velocità iniziale v₀</span><output data-for="v0"></output></div>
+      <input type="range" id="v0" min="1" max="100" step="0.5" value="25" data-unit=" m/s"></div>
+    <div class="slider"><div class="slider-top"><span>Angolo θ</span><output data-for="theta"></output></div>
+      <input type="range" id="theta" min="0" max="90" step="0.5" value="45" data-unit="°"></div>
+    <div class="slider"><div class="slider-top"><span>Altezza iniziale h₀</span><output data-for="h0"></output></div>
+      <input type="range" id="h0" min="0" max="100" step="0.5" value="0" data-unit=" m"></div>
+    <div class="slider"><div class="slider-top"><span>Attrito dell'aria k/m</span><output data-for="drag"></output></div>
+      <input type="range" id="drag" min="0" max="0.5" step="0.01" value="0" data-unit=" 1/s"></div>
+    <label class="field"><span class="field-label">Gravità</span>
+      <select id="g">
+        <option value="9.81">Terra (9,81 m/s²)</option><option value="1.62">Luna (1,62 m/s²)</option>
+        <option value="3.71">Marte (3,71 m/s²)</option><option value="24.79">Giove (24,79 m/s²)</option>
+      </select></label>
+    <div class="actions">
+      <button class="btn ghost" type="button" id="pin">Fissa traiettoria</button>
+      <button class="btn ghost" type="button" id="clear">Pulisci</button>
+    </div>
+  </div>
+  <div>
+    <div class="block"><div id="plot" class="plot"></div></div>
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Tempo di volo</div><div class="stat-value" id="s-t">–</div></div>
+      <div class="stat"><div class="stat-label">Gittata</div><div class="stat-value" id="s-r">–</div></div>
+      <div class="stat"><div class="stat-label">Altezza massima</div><div class="stat-value" id="s-h">–</div></div>
+      <div class="stat"><div class="stat-label">Velocità all'impatto</div><div class="stat-value" id="s-v">–</div></div>
+    </div>
+  </div>
+</div>
+{% include "_ad.html" %}
+<article class="prose panel">
+  <h2>Le equazioni del moto</h2>
+  <p>Senza attrito, il moto si scompone in uniforme lungo $x$ e uniformemente accelerato lungo $y$:</p>
+  <p>$$x(t) = v_0\cos\theta\; t, \qquad y(t) = h_0 + v_0\sin\theta\; t - \tfrac{1}{2} g t^2$$</p>
+  <p>Con $h_0 = 0$: tempo di volo $T = \frac{2 v_0 \sin\theta}{g}$, gittata $R = \frac{v_0^2 \sin 2\theta}{g}$ (massima per $\theta = 45°$), altezza massima $H = \frac{v_0^2 \sin^2\theta}{2g}$.</p>
+  <p>Con attrito viscoso ($\vec F = -k\vec v$) non esiste più simmetria: la traiettoria viene integrata numericamente con Runge-Kutta 4. Prova a fissare la traiettoria senza attrito e confrontala!</p>
+</article>
+{% endblock %}
+{% block scripts %}
+<script src="/static/vendor/plotly-basic.min.js"></script>
+<script src="/static/sim.js?v={{ version }}"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const pinned = [];
+  let last = null;
+
+  function simulate(v0, thetaDeg, h0, g, k) {
+    const th = thetaDeg * Math.PI / 180;
+    let s = [0, h0, v0 * Math.cos(th), v0 * Math.sin(th)];
+    const f = (u) => [u[2], u[3], -k * u[2], -g - k * u[3]];
+    const dt = Math.max(1e-3, (2 * v0 / g + Math.sqrt(2 * h0 / g) + 0.1) / 2000);
+    const xs = [s[0]], ys = [s[1]];
+    let t = 0, ymax = h0;
+    for (let i = 0; i < 200000; i++) {
+      const next = Sim.rk4(f, s, dt);
+      if (next[1] < 0) {
+        const a = s[1] / (s[1] - next[1]);  // interpolazione lineare dell'impatto
+        const hit = s.map((v, j) => v + a * (next[j] - v));
+        xs.push(hit[0]); ys.push(0); t += a * dt;
+        return {xs, ys, T: t, R: hit[0], H: ymax, V: Math.hypot(hit[2], hit[3])};
+      }
+      s = next; t += dt; ymax = Math.max(ymax, s[1]);
+      xs.push(s[0]); ys.push(s[1]);
+    }
+    return {xs, ys, T: t, R: s[0], H: ymax, V: Math.hypot(s[2], s[3])};
+  }
+
+  function update() {
+    const v0 = +$("v0").value, th = +$("theta").value, h0 = +$("h0").value, k = +$("drag").value, g = +$("g").value;
+    last = simulate(v0, th, h0, g, k);
+    last.name = `v₀=${v0}, θ=${th}°` + (k ? `, k=${k}` : "");
+    $("s-t").textContent = Sim.fmt(last.T) + " s";
+    $("s-r").textContent = Sim.fmt(last.R) + " m";
+    $("s-h").textContent = Sim.fmt(last.H) + " m";
+    $("s-v").textContent = Sim.fmt(last.V) + " m/s";
+    const traces = pinned.map((p) => ({x: p.xs, y: p.ys, mode: "lines", name: p.name, line: {dash: "dot"}}));
+    traces.push({x: last.xs, y: last.ys, mode: "lines", name: last.name, line: {width: 3}});
+    Sim.plot($("plot"), traces, {xaxis: {title: "x (m)", rangemode: "tozero"},
+      yaxis: {title: "y (m)", rangemode: "tozero", scaleanchor: "x"}});
+  }
+
+  Sim.bindSliders(update);
+  $("g").addEventListener("change", update);
+  $("pin").addEventListener("click", () => { if (last) pinned.push(last); update(); });
+  $("clear").addEventListener("click", () => { pinned.length = 0; update(); });
+  update();
+})();
+</script>
+{% endblock %}

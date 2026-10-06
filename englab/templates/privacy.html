@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Privacy e cookie · {{ settings.site_name }}{% endblock %}
+{% block content %}
+<nav class="crumbs"><a href="/">Home</a> › Privacy</nav>
+<h1>Privacy e cookie</h1>
+<article class="prose panel">
+  <p><strong>Nota per il gestore del sito:</strong> questo testo è un modello di partenza. Prima di attivare la pubblicità
+    adattalo alla tua situazione (titolare, contatti, fornitori) e verifica i requisiti GDPR e del Garante Privacy.</p>
+  <h2>Dati trattati</h2>
+  <p>{{ settings.site_name }} non richiede registrazione. Le espressioni inserite nei calcolatori vengono inviate al server solo per eseguire il calcolo e non vengono salvate.
+    I log tecnici del server (indirizzo IP, data e ora) sono conservati per il tempo strettamente necessario alla sicurezza del servizio.</p>
+  {% if settings.analytics_domain %}
+  <h2>Statistiche</h2>
+  <p>Usiamo Plausible Analytics, che non utilizza cookie e non raccoglie dati personali, per contare le visite in forma aggregata.</p>
+  {% endif %}
+  {% if settings.adsense_client %}
+  <h2>Pubblicità</h2>
+  <p>Il sito mostra annunci tramite Google AdSense. Google e i suoi partner possono usare cookie per mostrare annunci, anche personalizzati, previo consenso.
+    Puoi gestire le preferenze dal banner del consenso e su <a href="https://adssettings.google.com" rel="noopener">adssettings.google.com</a>.</p>
+  {% endif %}
+  <h2>Contatti</h2>
+  <p>{% if settings.contact_email %}Per qualsiasi richiesta: <a href="mailto:{{ settings.contact_email }}">{{ settings.contact_email }}</a>.{% else %}Indirizzo di contatto da configurare (ENGLAB_CONTACT_EMAIL).{% endif %}</p>
+</article>
+{% endblock %}

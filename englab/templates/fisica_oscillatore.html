@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}{{ tool.title }} · {{ settings.site_name }}{% endblock %}
+{% block description %}{{ tool.description }}{% endblock %}
+{% block content %}
+<nav class="crumbs"><a href="/">Home</a> › <a href="/fisica">Fisica 1</a> › {{ tool.name }}</nav>
+<h1>{{ tool.title }}</h1>
+<p class="lead">{{ tool.description }}</p>
+
+<div class="sim-grid">
+  <div class="panel">
+    <div class="slider"><div class="slider-top"><span>Massa m</span><output data-for="m"></output></div>
+      <input type="range" id="m" min="0.1" max="10" step="0.1" value="1" data-unit=" kg"></div>
+    <div class="slider"><div class="slider-top"><span>Costante elastica k</span><output data-for="k"></output></div>
+      <input type="range" id="k" min="0.5" max="100" step="0.5" value="20" data-unit=" N/m"></div>
+    <div class="slider"><div class="slider-top"><span>Smorzamento c</span><output data-for="c"></output></div>
+      <input type="range" id="c" min="0" max="30" step="0.1" value="1" data-unit=" kg/s"></div>
+    <div class="slider"><div class="slider-top"><span>Posizione iniziale x₀</span><output data-for="x0"></output></div>
+      <input type="range" id="x0" min="-2" max="2" step="0.05" value="1" data-unit=" m"></div>
+    <div class="slider"><div class="slider-top"><span>Velocità iniziale v₀</span><output data-for="v0"></output></div>
+      <input type="range" id="v0" min="-10" max="10" step="0.1" value="0" data-unit=" m/s"></div>
+    <div class="slider"><div class="slider-top"><span>Durata</span><output data-for="T"></output></div>
+      <input type="range" id="T" min="2" max="40" step="1" value="10" data-unit=" s"></div>
+    <p class="note info small" id="regime"></p>
+  </div>
+  <div>
+    <div class="block"><h3 class="block-title">Posizione x(t)</h3><div id="plot-x" class="plot"></div></div>
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Pulsazione propria ω₀</div><div class="stat-value" id="s-w">–</div></div>
+      <div class="stat"><div class="stat-label">Smorzamento ζ</div><div class="stat-value" id="s-z">–</div></div>
+      <div class="stat"><div class="stat-label">Periodo (smorzato)</div><div class="stat-value" id="s-p">–</div></div>
+      <div class="stat"><div class="stat-label">Energia iniziale</div><div class="stat-value" id="s-e">–</div></div>
+    </div>
+    <div class="block" style="margin-top:16px"><h3 class="block-title">Energia</h3><div id="plot-e" class="plot"></div></div>
+  </div>
+</div>
+{% include "_ad.html" %}
+<article class="prose panel">
+  <h2>L'equazione dell'oscillatore smorzato</h2>
+  <p>$$m\ddot x + c\dot x + kx = 0, \qquad \omega_0 = \sqrt{\frac{k}{m}}, \qquad \zeta = \frac{c}{2\sqrt{km}}$$</p>
+  <ul>
+    <li>$\zeta < 1$: <b>sottosmorzato</b>, oscilla con pulsazione $\omega_d = \omega_0\sqrt{1-\zeta^2}$ e ampiezza che decade come $e^{-\zeta\omega_0 t}$;</li>
+    <li>$\zeta = 1$: <b>smorzamento critico</b>, torna all'equilibrio nel minor tempo senza oscillare (es. ammortizzatori);</li>
+    <li>$\zeta > 1$: <b>sovrasmorzato</b>, torna lentamente senza oscillare.</li>
+  </ul>
+  <p>L'energia meccanica $E = \tfrac12 m v^2 + \tfrac12 k x^2$ si conserva solo se $c = 0$: lo smorzamento la dissipa.</p>
+</article>
+{% endblock %}
+{% block scripts %}
+<script src="/static/vendor/plotly-basic.min.js"></script>
+<script src="/static/sim.js?v={{ version }}"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  function update() {
+    const m = +$("m").value, k = +$("k").value, c = +$("c").value, T = +$("T").value;
+    let s = [+$("x0").value, +$("v0").value];
+    const f = (u) => [u[1], (-c * u[1] - k * u[0]) / m];
+    const n = 1500, dt = T / n;
+    const t = [0], x = [s[0]], ek = [0.5 * m * s[1] ** 2], ep = [0.5 * k * s[0] ** 2];
+    for (let i = 1; i <= n; i++) {
+      s = Sim.rk4(f, s, dt);
+      t.push(i * dt); x.push(s[0]); ek.push(0.5 * m * s[1] ** 2); ep.push(0.5 * k * s[0] ** 2);
+    }
+    const w0 = Math.sqrt(k / m), z = c / (2 * Math.sqrt(k * m));
+    $("s-w").textContent = Sim.fmt(w0) + " rad/s";
+    $("s-z").textContent = Sim.fmt(z, 3);
+    $("s-p").textContent = z < 1 ? Sim.fmt(2 * Math.PI / (w0 * Math.sqrt(1 - z * z))) + " s" : "non oscilla";
+    $("s-e").textContent = Sim.fmt(ek[0] + ep[0]) + " J";
+    $("regime").textContent = Math.abs(z - 1) < 0.02 ? "Smorzamento critico (ζ ≈ 1)"
+      : z === 0 ? "Non smorzato: oscillazione armonica perpetua"
+      : z < 1 ? "Regime sottosmorzato (ζ < 1): oscilla smorzandosi"
+      : "Regime sovrasmorzato (ζ > 1): nessuna oscillazione";
+    const traces = [{x: t, y: x, mode: "lines", name: "x(t)", line: {width: 3}}];
+    if (c > 0 && z < 1) {
+      const env = t.map((tt) => Math.exp(-z * w0 * tt));
+      const A = Math.hypot(x[0], (+$("v0").value + z * w0 * x[0]) / (w0 * Math.sqrt(1 - z * z)));
+      traces.push({x: t, y: env.map((e) => A * e), mode: "lines", name: "inviluppo", line: {dash: "dot"}});
+      traces.push({x: t, y: env.map((e) => -A * e), mode: "lines", showlegend: false, line: {dash: "dot", color: "#e8590c"}});
+    }
+    Sim.plot($("plot-x"), traces, {xaxis: {title: "t (s)"}, yaxis: {title: "x (m)"}});
+    Sim.plot($("plot-e"), [
+      {x: t, y: ek, mode: "lines", name: "cinetica", stackgroup: "e"},
+      {x: t, y: ep, mode: "lines", name: "potenziale", stackgroup: "e"},
+    ], {xaxis: {title: "t (s)"}, yaxis: {title: "E (J)"}});
+  }
+  Sim.bindSliders(update);
+  update();
+})();
+</script>
+{% endblock %}

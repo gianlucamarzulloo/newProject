@@ -1,0 +1,9 @@
+[project]
+name = "englab"
+version = "0.1.0"
+description = "Calcolatori passo passo per studenti di ingegneria"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

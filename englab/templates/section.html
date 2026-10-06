@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% set sname, sdesc = sections[section] %}
+{% block title %}{{ sname }} · esercizi risolti passo passo · {{ settings.site_name }}{% endblock %}
+{% block description %}{{ sname }}: {{ sdesc }} Calcolatori gratuiti per studenti di ingegneria.{% endblock %}
+{% block content %}
+<nav class="crumbs"><a href="/">Home</a> › {{ sname }}</nav>
+<h1>{{ sname }}</h1>
+<p class="lead">{{ sdesc }}</p>
+<div class="grid">
+  {% for t in items %}
+  <a class="card" href="{{ t.url }}">
+    <span class="card-title">{{ t.name }}</span>
+    <span class="card-desc">{{ t.description }}</span>
+  </a>
+  {% endfor %}
+  {% for t in client %}
+  <a class="card" href="/{{ t.section }}/{{ t.slug }}">
+    <span class="card-title">{{ t.name }} <span class="tag">simulatore</span></span>
+    <span class="card-desc">{{ t.description }}</span>
+  </a>
+  {% endfor %}
+</div>
+{% include "_ad.html" %}
+{% endblock %}

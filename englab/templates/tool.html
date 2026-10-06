@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% set sname = sections[tool.section][0] %}
+{% block title %}{{ tool.title }} · {{ settings.site_name }}{% endblock %}
+{% block description %}{{ tool.description }}{% endblock %}
+{% block head %}
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "WebApplication", "name": {{ tool.title|tojson }},
+ "description": {{ tool.description|tojson }}, "applicationCategory": "EducationalApplication",
+ "operatingSystem": "Web", "inLanguage": "it", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"},
+ "url": {{ (settings.site_url ~ tool.url)|tojson }}}
+</script>
+{% endblock %}
+{% block content %}
+<nav class="crumbs"><a href="/">Home</a> › <a href="/{{ tool.section }}">{{ sname }}</a> › {{ tool.name }}</nav>
+<h1>{{ tool.title }}</h1>
+<p class="lead">{{ tool.description }}</p>
+
+<div class="tool-layout">
+  <div class="tool-main">
+    <form id="tool-form" class="panel" data-api="/api/{{ tool.section }}/{{ tool.slug }}" autocomplete="off">
+      <div class="fields">
+        {% for f in tool.fields %}
+        <label class="field {% if f.kind == 'textarea' %}wide{% endif %}" data-field="{{ f.name }}"
+               {% if f.show_if %}data-show-if='{{ f.show_if|tojson }}'{% endif %}>
+          <span class="field-label">{{ f.label }}</span>
+          {% if f.kind == 'textarea' %}
+          <textarea name="{{ f.name }}" rows="4" spellcheck="false" placeholder="{{ f.placeholder }}">{{ f.default }}</textarea>
+          {% elif f.kind == 'select' %}
+          <select name="{{ f.name }}">
+            {% for value, label in f.options %}<option value="{{ value }}" {% if value == f.default %}selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select>
+          {% else %}
+          <input name="{{ f.name }}" value="{{ f.default }}" placeholder="{{ f.placeholder }}" spellcheck="false"
+                 {% if f.kind == 'number' %}inputmode="numeric"{% endif %}>
+          {% endif %}
+          {% if f.help %}<span class="field-help">{{ f.help }}</span>{% endif %}
+        </label>
+        {% endfor %}
+      </div>
+      <div class="actions">
+        <button class="btn" type="submit">Calcola</button>
+        <button class="btn ghost" type="button" id="share-btn" title="Copia un link a questo esercizio">Condividi</button>
+        <button class="btn ghost" type="button" onclick="window.print()" title="Stampa o salva in PDF">PDF</button>
+        <a class="small muted" href="/come-si-scrive">Come si scrivono le formule?</a>
+      </div>
+    </form>
+
+    <div class="examples">
+      <span class="muted small">Esempi:</span>
+      {% for ex in tool.examples %}
+      <button type="button" class="chip" data-example='{{ ex|tojson }}'>{{ ex.values()|first|replace('\n', ' · ') }}</button>
+      {% endfor %}
+    </div>
+
+    <div id="output" class="output" aria-live="polite"></div>
+    {% include "_ad.html" %}
+
+    <article class="prose panel">
+      <h2>Teoria in breve</h2>
+      {{ tool.theory|safe }}
+    </article>
+  </div>
+
+  <aside class="tool-side">
+    <div class="panel">
+      <h3>Altri strumenti di {{ sname }}</h3>
+      <ul class="side-links">
+        {% for t in related %}<li><a href="{{ t.url }}">{{ t.name }}</a></li>{% endfor %}
+      </ul>
+    </div>
+    {% if settings.donate_url %}
+    <div class="panel support">
+      <h3>Ti è stato utile?</h3>
+      <p class="small">{{ settings.site_name }} è gratuito e senza registrazione. Se ti ha salvato un esame, puoi offrirmi un caffè.</p>
+      <a class="btn small-btn" href="{{ settings.donate_url }}" target="_blank" rel="noopener">☕ Supporta il progetto</a>
+    </div>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/vendor/plotly-basic.min.js" defer></script>
+<script src="/static/app.js?v={{ version }}" defer></script>
+{% endblock %}

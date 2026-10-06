@@ -1,0 +1,18 @@
+# Deploy con un click su Render (https://render.com): New > Blueprint > seleziona questo repo.
+services:
+  - type: web
+    name: englab
+    runtime: docker
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      - key: ENGLAB_SITE_URL
+        sync: false
+      - key: ENGLAB_MAX_CONCURRENT
+        value: "2"
+      - key: ENGLAB_ADSENSE_CLIENT
+        sync: false
+      - key: ENGLAB_ADSENSE_SLOT
+        sync: false
+      - key: ENGLAB_DONATE_URL
+        sync: false
